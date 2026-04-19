@@ -19,7 +19,7 @@ async function callGoogle(functionName, args = []) {
     }
 
     const result = await response.json();
-
+    console.log(">>> 系統回傳結果:", result);
     if (result.status === "error") {
       throw new Error(result.message);
     }
