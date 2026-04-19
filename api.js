@@ -3,7 +3,7 @@
  */
 
 // IMPORTANT: Replace with your deployed Web App URL
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUktVfJp9RhU-tM3VaYqXaSaeAMmH8U76L3Fu_HUi4gyGD1GaSaMR5tC1Y_JerUzCclw/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypEwqlxoCggqg1K7G8m96N0PF0ipD3C7xxgqosBvxqLT-KrhM3gQx8-cCMr5jtUwBXcg/exec";
 
 /**
  * Replaces google.script.run
