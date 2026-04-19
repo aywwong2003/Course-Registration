@@ -119,11 +119,17 @@
       Swal.fire({ title: '驗證中...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       try {
         const info = await callGoogle("validateMemberWithDOB", [mid, year.toString()]);
+        
         if (!info.success) {
-           // 如果驗證失敗，顯示具體的錯誤訊息
+           // 調試模式：顯示系統紀錄的年份與輸入的年份
+           let debugInfo = "";
+           if (info.debugYear) {
+             debugInfo = `<br><br><div class="text-sm bg-red-50 p-2 rounded text-red-600 font-mono">系統紀錄年份: ${info.debugYear}<br>您輸入的年份: ${year}</div>`;
+           }
+
            return Swal.fire({
              title: "驗證失敗",
-             text: info.message + " (請檢查西元年份是否正確)",
+             html: `<div>${info.message}${debugInfo}</div>`,
              icon: "error",
              confirmButtonText: "重試"
            }).then(() => askYear(mid));
