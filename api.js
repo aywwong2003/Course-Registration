@@ -9,14 +9,25 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRLyUk7zS0bc
  * Replaces google.script.run
  */
 async function callGoogle(functionName, args = []) {
-  const url = `${GOOGLE_SCRIPT_URL}?function=${functionName}&args=${encodeURIComponent(JSON.stringify(args))}`;
+  try {
+    const url = `${GOOGLE_SCRIPT_URL}?function=${functionName}&args=${encodeURIComponent(JSON.stringify(args))}`;
 
-  const response = await fetch(url, {
-    method: "GET"
-  });
+    const response = await fetch(url);
 
-  const result = await response.json();
+    if (!response.ok) {
+      throw new Error("Network response error");
+    }
 
-  if (result.status === "error") throw new Error(result.message);
-  return result.data;
+    const result = await response.json();
+
+    if (result.status === "error") {
+      throw new Error(result.message);
+    }
+
+    return result.data;
+
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
 }
