@@ -45,7 +45,8 @@
         <div id="step-1" class="space-y-5">
           <div>
             <label>會員編號 Member ID</label>
-            <input type="number" id="m_id" placeholder="請輸入 8 位數字編號" onkeydown="vKey(event)" oninput="cInp(this, 8)" inputmode="numeric">
+            <!-- 已更改為限制 5 位數 -->
+            <input type="number" id="m_id" placeholder="請輸入 5 位數字編號" onkeydown="vKey(event)" oninput="cInp(this, 5)" inputmode="numeric">
           </div>
           <button onclick="checkID()" class="btn-primary">下一步 / Next Step</button>
         </div>
@@ -62,7 +63,6 @@
     let currentUser = null;
     let currentYear = null;
 
-    // Helper functions from ver 3.0
     function vKey(e) { if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault(); }
     function cInp(i, m) { if (i.value.length > m) i.value = i.value.slice(0, m); }
 
@@ -81,7 +81,8 @@
 
     async function checkID() {
       const mid = document.getElementById('m_id').value;
-      if (mid.length !== 8) return Swal.fire("格式錯誤", "請輸入完整的 8 位會員編號", "warning");
+      // 已更改驗證邏輯為 5 位數
+      if (mid.length !== 5) return Swal.fire("格式錯誤", "請輸入完整的 5 位會員編號", "warning");
 
       Swal.fire({ title: '檢查中...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
@@ -119,7 +120,6 @@
         const info = await callGoogle("validateMemberWithDOB", [mid, year]);
         if (!info.success) throw new Error(info.message);
         
-        // Show update contact info dialog (from ver 3.0)
         Swal.fire({
           title: '請核對及更新資料',
           html: `<div class="text-left p-2 space-y-2">
