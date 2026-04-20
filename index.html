@@ -110,7 +110,7 @@
             <div class="bg-indigo-50 p-5 rounded-2xl border-2 border-indigo-100">
               <label class="text-lg">
                 個人電話
-                <span class="label-en">Phone Number</span>
+                <span class="label-en">Personal Phone Number</span>
               </label>
               <input type="number" id="userPhone" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric" placeholder="8 or 10 digits">
             </div>
@@ -122,7 +122,7 @@
               <input type="text" id="emeName" maxlength="30" class="mb-3" placeholder="Name">
               <label class="text-lg">
                 緊急聯絡電話
-                <span class="label-en">Emergency Contact No</span>
+                <span class="label-en">Emergency Contact No.</span>
               </label>
               <input type="number" id="emePhone" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric" placeholder="8 or 10 digits">
             </div>
@@ -413,9 +413,18 @@
           title: '更新聯絡資料',
           html: `<div class="space-y-4 text-left p-2">
             <p class="text-xs text-gray-500 text-center -mt-2 mb-4">Update Contact Info</p>
-            <div><label class="text-sm">個人電話 <span class="text-xs font-normal opacity-60">Personal Phone</span></label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric"></div>
-            <div><label class="text-sm">緊急聯絡人 <span class="text-xs font-normal opacity-60">Emergency Contact Name</span></label><input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input"></div>
-            <div><label class="text-sm">緊急電話 <span class="text-xs font-normal opacity-60">Emergency Phone</span></label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric"></div>
+            <div>
+              <label class="text-sm font-bold">個人電話 <span class="text-xs font-normal opacity-60">Personal Phone</span></label>
+              <input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+            </div>
+            <div>
+              <label class="text-sm font-bold">緊急聯絡人姓名 <span class="text-xs font-normal opacity-60">Emergency Contact Name</span></label>
+              <input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input">
+            </div>
+            <div>
+              <label class="text-sm font-bold">緊急聯絡電話 <span class="text-xs font-normal opacity-60">Emergency Phone No.</span></label>
+              <input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+            </div>
           </div>`,
           showCancelButton: true,
           confirmButtonText: '儲存更新 / Save',
@@ -468,7 +477,7 @@
     function handleNearMiss(id, yr) {
       Swal.fire({ 
         title: '找不到會員資料', 
-        html: `<p>編號 ${id} 尚未註冊，是否現在建立帳號？</p><p class="text-sm text-gray-500 mt-2">Member ID ${id} not found. Create now?</p>`, 
+        html: `<p>編號 ${id} 尚未註冊，是否現在建立帳號？</p><p class="text-sm text-gray-500 mt-2">Member ID ${id} not found. Create account now?</p>`, 
         icon: 'question', 
         showCancelButton: true,
         confirmButtonText: '建立 / Create',
@@ -478,11 +487,23 @@
           Swal.fire({
             title: '會員註冊',
             html: `<p class="text-xs text-gray-500 -mt-2 mb-4">Member Registration</p>
-            <div class="space-y-4">
-              <input id="n_name" placeholder="真實姓名 / Real Name" class="swal2-input swal-custom-input">
-              <input id="n_phone" placeholder="聯絡電話 / Personal Phone" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
-              <input id="n_emname" placeholder="緊急聯絡人 / Emergency Contact Name" class="swal2-input swal-custom-input">
-              <input id="n_emphone" placeholder="緊急電話 / Emergency Phone" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+            <div class="space-y-4 text-left">
+              <div>
+                <label class="text-sm font-bold">真實姓名 <span class="text-xs font-normal opacity-60">Full Name</span></label>
+                <input id="n_name" placeholder="Name" class="swal2-input swal-custom-input">
+              </div>
+              <div>
+                <label class="text-sm font-bold">個人電話 <span class="text-xs font-normal opacity-60">Personal Phone</span></label>
+                <input id="n_phone" placeholder="8 or 10 digits" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+              </div>
+              <div>
+                <label class="text-sm font-bold">緊急聯絡人姓名 <span class="text-xs font-normal opacity-60">Emergency Contact Name</span></label>
+                <input id="n_emname" placeholder="Name" class="swal2-input swal-custom-input">
+              </div>
+              <div>
+                <label class="text-sm font-bold">緊急聯絡電話 <span class="text-xs font-normal opacity-60">Emergency Phone No.</span></label>
+                <input id="n_emphone" placeholder="8 or 10 digits" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+              </div>
             </div>`,
             confirmButtonText: '提交 / Submit',
             preConfirm: () => {
