@@ -95,7 +95,7 @@
       </section>
 
       <!-- 功能按鈕區 (Bottom Utilities) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div id="bottom-utils" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button id="btn-history" onclick="showHistory()" disabled class="btn-main bg-white text-slate-700 border-4 border-slate-200 shadow-sm">查詢/取消報名</button>
         <button id="btn-update" onclick="handleUpdateContact()" disabled class="btn-main bg-white text-slate-700 border-4 border-slate-200 shadow-sm">更新聯絡資料</button>
         <button id="btn-exit" onclick="location.reload()" class="btn-main bg-slate-100 text-slate-500 col-span-1 md:col-span-2">登出系統 / Logout</button>
@@ -115,10 +115,16 @@
         const res = await callGoogle('checkSystemStatus');
         sysConfig.registrationEnabled = res.registrationEnabled;
         document.getElementById('loading-status').classList.add('hidden');
+        
+        // Handle logic for Flag No (N)
         if (!sysConfig.registrationEnabled) {
+          // Hide Login and History
+          document.getElementById('auth-section').classList.add('hidden');
+          document.getElementById('btn-history').classList.add('hidden');
+          
           Swal.fire({
             title: '系統維護中',
-            text: '目前暫不開放報名，請稍後再試。',
+            text: '目前暫不開放報名，僅提供更新聯絡資料功能。',
             icon: 'info',
             confirmButtonText: '確定'
           });
@@ -161,7 +167,6 @@
     function validateRegInput() {
       const cid = document.getElementById('courseSelect').value;
       const phone = document.getElementById('userPhone').value;
-      // Phone must be exactly 8 or 10 digits
       const isValid = (cid !== "") && (phone.length === 8 || phone.length === 10);
       document.getElementById('submit-btn').disabled = !isValid;
     }
@@ -185,7 +190,11 @@
         const res = await callGoogle('validateMember', [mid, yr]);
         if (res.success) {
           Swal.close();
+          // Logic: Hide all entrance buttons when going inside registration
           document.getElementById('auth-section').classList.add('hidden');
+          document.getElementById('btn-history').classList.add('hidden');
+          document.getElementById('btn-update').classList.add('hidden');
+          
           document.getElementById('reg-section').classList.remove('hidden');
           document.getElementById('welcome-msg').innerHTML = `👋 您好，<span class="text-indigo-600">${res.userName}</span>`;
           
@@ -346,42 +355,52 @@
     async function handleUpdateContact() {
       const mid = document.getElementById('mid').value;
       const yr = document.getElementById('birthYear').value;
-      if (!mid || !yr) return;
+      
+      // If flag is N, we need credentials first
+      if (!mid || !yr) {
+        return Swal.fire({
+          title: '請輸入資料進行驗證',
+          text: '請在主頁輸入編號及年份後再點擊此按鈕',
+          icon: 'warning'
+        });
+      }
 
       Swal.fire({ title: '讀取資料...', didOpen: () => Swal.showLoading() });
-      const info = await callGoogle('getMemberContactInfo', [mid, yr]);
-      Swal.close();
+      try {
+        const info = await callGoogle('getMemberContactInfo', [mid, yr]);
+        Swal.close();
 
-      if (!info.success) return Swal.fire('錯誤', info.message || '資料讀取失敗', 'error');
+        if (!info.success) return Swal.fire('錯誤', info.message || '資料讀取失敗', 'error');
 
-      Swal.fire({
-        title: '更新聯絡資料',
-        html: `<div class="space-y-4 text-left p-2">
-          <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">個人電話 (Phone)</label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric"></div>
-          <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">緊急聯絡人 (Emergency Name)</label><input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input"></div>
-          <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">緊急電話 (Emergency Phone)</label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric"></div>
-        </div>`,
-        showCancelButton: true,
-        confirmButtonText: '儲存更新 Save',
-        cancelButtonText: '取消 Exit',
-        preConfirm: () => {
-          const res = {
-            phone: document.getElementById('u_p').value,
-            emName: document.getElementById('u_en').value,
-            emPhone: document.getElementById('u_ep').value
-          };
-          if (res.phone.length !== 8 && res.phone.length !== 10) return Swal.showValidationMessage('個人電話必須為 8 或 10 位');
-          if (!res.emName) return Swal.showValidationMessage('請輸入緊急聯絡人姓名');
-          if (res.emPhone.length !== 8 && res.emPhone.length !== 10) return Swal.showValidationMessage('緊急電話必須為 8 或 10 位');
-          return res;
-        }
-      }).then(async (r) => {
-        if (r.isConfirmed) {
-          Swal.fire({ title: '儲存中...', didOpen: () => Swal.showLoading() });
-          const res = await callGoogle('updateMemberContactInfo', [mid, r.value.phone, r.value.emName, r.value.emPhone]);
-          Swal.fire(res.success ? '成功' : '失敗', res.message, res.success ? 'success' : 'error');
-        }
-      });
+        Swal.fire({
+          title: '更新聯絡資料',
+          html: `<div class="space-y-4 text-left p-2">
+            <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">個人電話 (Phone)</label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric"></div>
+            <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">緊急聯絡人 (Emergency Name)</label><input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input"></div>
+            <div class="flex flex-col"><label class="text-sm font-bold text-slate-500">緊急電話 (Emergency Phone)</label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" onkeydown="vKey(event)" inputmode="numeric"></div>
+          </div>`,
+          showCancelButton: true,
+          confirmButtonText: '儲存更新 Save',
+          cancelButtonText: '取消 Exit',
+          preConfirm: () => {
+            const res = {
+              phone: document.getElementById('u_p').value,
+              emName: document.getElementById('u_en').value,
+              emPhone: document.getElementById('u_ep').value
+            };
+            if (res.phone.length !== 8 && res.phone.length !== 10) return Swal.showValidationMessage('個人電話必須為 8 或 10 位');
+            if (!res.emName) return Swal.showValidationMessage('請輸入緊急聯絡人姓名');
+            if (res.emPhone.length !== 8 && res.emPhone.length !== 10) return Swal.showValidationMessage('緊急電話必須為 8 或 10 位');
+            return res;
+          }
+        }).then(async (r) => {
+          if (r.isConfirmed) {
+            Swal.fire({ title: '儲存中...', didOpen: () => Swal.showLoading() });
+            const res = await callGoogle('updateMemberContactInfo', [mid, r.value.phone, r.value.emName, r.value.emPhone]);
+            Swal.fire(res.success ? '成功' : '失敗', res.message, res.success ? 'success' : 'error');
+          }
+        });
+      } catch (e) { Swal.fire('錯誤', '連線失敗', 'error'); }
     }
 
     /**
@@ -430,7 +449,7 @@
                 emePhone: r2.value.emePhone 
               }]);
               Swal.fire(res.success ? '成功 Success' : '失敗 Failed', res.msg, res.success ? 'success' : 'error').then(() => {
-                if(res.success) doLogin(); // Auto-login after registration
+                if(res.success) doLogin();
               });
             }
           });
