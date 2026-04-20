@@ -6,18 +6,18 @@
   <title>課程報名系統 | GitHub 版</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- 引入 GitHub API 橋接器 -->
   <script src="api.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap');
     body { background-color: #f1f5f9; font-family: 'Noto Sans TC', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
     label { font-size: 1.25rem !important; font-weight: 900 !important; color: #0f172a !important; display: block; margin-bottom: 0.5rem; }
     input, select { font-size: 1.35rem !important; width: 100%; height: 4.5rem; padding: 0 1.25rem; border-radius: 1rem; border: 4px solid #94a3b8; color: #000; background: #fff; }
-    .btn-main { height: 5rem; font-size: 1.5rem; font-weight: 900; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
+    .btn-main { height: 5rem; font-size: 1.5rem; font-weight: 900; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; transition: all 0.1s; border: 4px solid transparent; }
     .btn-main:active { transform: scale(0.95); }
     .card { background: white; border-radius: 2rem; padding: 1.5rem; border: 3px solid #e2e8f0; }
     .hidden { display: none !important; }
     .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 50; display: flex; align-items: center; justify-content: center; }
+    .swal-custom-input { font-size: 1.1rem !important; height: 3.5rem !important; margin: 0.5rem 0 !important; }
   </style>
 </head>
 <body>
@@ -76,15 +76,15 @@
             </div>
           </div>
 
-          <button onclick="doSubmit()" class="btn-main w-full bg-emerald-600 text-white">確認提交報名 / Submit</button>
+          <button onclick="doSubmit()" class="btn-main w-full bg-emerald-600 text-white shadow-lg">確認提交報名 / Submit</button>
         </div>
       </section>
 
       <!-- 功能按鈕區 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button id="btn-history" onclick="showHistory()" class="btn-main bg-white text-slate-700 border-4 border-slate-200">查詢/取消報名</button>
-        <button id="btn-update" onclick="handleUpdateContact()" class="btn-main bg-white text-slate-700 border-4 border-slate-200">更新聯絡資料</button>
-        <button id="btn-exit" onclick="location.reload()" class="btn-main bg-slate-100 text-slate-500 col-span-full">登出系統 / Logout</button>
+        <button id="btn-history" onclick="showHistory()" class="btn-main bg-white text-slate-700 border-4 border-slate-200 shadow-sm">查詢/取消報名</button>
+        <button id="btn-update" onclick="handleUpdateContact()" class="btn-main bg-white text-slate-700 border-4 border-slate-200 shadow-sm">更新聯絡資料</button>
+        <button id="btn-exit" onclick="location.reload()" class="btn-main bg-slate-100 text-slate-500 col-span-1 md:col-span-2">登出系統 / Logout</button>
       </div>
     </main>
   </div>
@@ -93,7 +93,6 @@
     let sysConfig = { registrationEnabled: true };
     let coursesData = [];
 
-    // 初始化：檢查系統狀態
     window.onload = async function() {
       try {
         const res = await callGoogle('checkSystemStatus');
@@ -225,23 +224,36 @@
       const yr = document.getElementById('birthYear').value;
       if (!mid || !yr) return Swal.fire('請先登入', '', 'info');
 
+      Swal.fire({ title: '讀取資料...', didOpen: () => Swal.showLoading() });
       const info = await callGoogle('getMemberContactInfo', [mid, yr]);
-      if (!info.success) return Swal.fire('驗證錯誤', '', 'error');
+      Swal.close();
+
+      if (!info.success) return Swal.fire('驗證錯誤', info.message || '', 'error');
 
       Swal.fire({
         title: '更新聯絡資料',
         html: `<div class="space-y-4 text-left">
-          <div><label class="text-sm">個人電話</label><input id="u_p" value="${info.phone}" class="swal2-input m-0 w-full" type="number"></div>
-          <div><label class="text-sm">緊急聯絡人</label><input id="u_en" value="${info.emName}" class="swal2-input m-0 w-full"></div>
-          <div><label class="text-sm">緊急電話</label><input id="u_ep" value="${info.emPhone}" class="swal2-input m-0 w-full" type="number"></div>
+          <div class="flex flex-col"><label class="text-sm font-bold">個人電話</label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)"></div>
+          <div class="flex flex-col"><label class="text-sm font-bold">緊急聯絡人</label><input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input"></div>
+          <div class="flex flex-col"><label class="text-sm font-bold">緊急電話</label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)"></div>
         </div>`,
-        preConfirm: () => ({
-          phone: document.getElementById('u_p').value,
-          emName: document.getElementById('u_en').value,
-          emPhone: document.getElementById('u_ep').value
-        })
+        showCancelButton: true,
+        confirmButtonText: '儲存更新',
+        cancelButtonText: '取消',
+        preConfirm: () => {
+          const res = {
+            phone: document.getElementById('u_p').value,
+            emName: document.getElementById('u_en').value,
+            emPhone: document.getElementById('u_ep').value
+          };
+          if (res.phone.length !== 8 && res.phone.length !== 10) return Swal.showValidationMessage('電話須為 8 或 10 位');
+          if (!res.emName) return Swal.showValidationMessage('請輸入緊急聯絡人姓名');
+          if (res.emPhone.length !== 8 && res.emPhone.length !== 10) return Swal.showValidationMessage('緊急電話須為 8 或 10 位');
+          return res;
+        }
       }).then(async (r) => {
         if (r.isConfirmed) {
+          Swal.fire({ title: '儲存中...', didOpen: () => Swal.showLoading() });
           const res = await callGoogle('updateMemberContactInfo', [mid, r.value.phone, r.value.emName, r.value.emPhone]);
           Swal.fire(res.success ? '成功' : '失敗', res.message, res.success ? 'success' : 'error');
         }
@@ -250,8 +262,8 @@
 
     function handleNearMiss(id, yr) {
       Swal.fire({
-        title: '找不到此編號',
-        text: `編號 ${id} 尚未註冊，是否現在建立新帳號？`,
+        title: '編號尚未註冊',
+        text: `編號 ${id} 尚未建立資料，是否現在註冊？`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: '註冊新帳號'
@@ -259,12 +271,34 @@
         if (r.isConfirmed) {
           Swal.fire({
             title: '新會員註冊',
-            html: `<input id="n_name" placeholder="姓名" class="swal2-input">
-                   <input id="n_phone" placeholder="電話" class="swal2-input" type="number">`,
-            preConfirm: () => ({ name: document.getElementById('n_name').value, phone: document.getElementById('n_phone').value })
+            html: `<div class="space-y-2 text-left">
+                     <label class="text-sm font-bold">姓名</label><input id="n_name" placeholder="姓名" class="swal2-input swal-custom-input">
+                     <label class="text-sm font-bold">個人電話</label><input id="n_phone" placeholder="個人電話" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)">
+                     <label class="text-sm font-bold">緊急聯絡人</label><input id="n_emeName" placeholder="緊急聯絡人姓名" class="swal2-input swal-custom-input">
+                     <label class="text-sm font-bold">緊急電話</label><input id="n_emePhone" placeholder="緊急聯絡電話" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)">
+                   </div>`,
+            preConfirm: () => {
+              const data = {
+                name: document.getElementById('n_name').value,
+                phone: document.getElementById('n_phone').value,
+                emeName: document.getElementById('n_emeName').value,
+                emePhone: document.getElementById('n_emePhone').value
+              };
+              if (!data.name) return Swal.showValidationMessage('請輸入姓名');
+              if (data.phone.length < 8) return Swal.showValidationMessage('請輸入正確電話');
+              return data;
+            }
           }).then(async (r2) => {
             if (r2.isConfirmed) {
-              const res = await callGoogle('createNewMember', [{ mid: id, name: r2.value.name, dob: yr + '-01-01', userPhone: r2.value.phone, emeName: '', emePhone: '' }]);
+              Swal.fire({ title: '建立中...', didOpen: () => Swal.showLoading() });
+              const res = await callGoogle('createNewMember', [{ 
+                mid: id, 
+                name: r2.value.name, 
+                dob: yr + '-01-01', 
+                userPhone: r2.value.phone, 
+                emeName: r2.value.emeName, 
+                emePhone: r2.value.emePhone 
+              }]);
               Swal.fire('完成', res.msg, 'success');
             }
           });
