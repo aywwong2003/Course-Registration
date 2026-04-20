@@ -489,23 +489,25 @@
             html: `<p class="text-xs text-gray-500 -mt-2 mb-4">Member Registration</p>
             <div class="space-y-4 text-left">
               <div>
-                <label class="text-sm font-bold">真實姓名 <span class="text-xs font-normal opacity-60">Full Name</span></label>
+                <label class="text-sm font-bold">真實姓名<span class="label-en">Full Name</span></label>
                 <input id="n_name" placeholder="Name" class="swal2-input swal-custom-input">
               </div>
               <div>
-                <label class="text-sm font-bold">個人電話 <span class="text-xs font-normal opacity-60">Personal Phone</span></label>
+                <label class="text-sm font-bold">個人電話<span class="label-en">Personal Phone</span></label>
                 <input id="n_phone" placeholder="8 or 10 digits" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
               </div>
               <div>
-                <label class="text-sm font-bold">緊急聯絡人姓名 <span class="text-xs font-normal opacity-60">Emergency Contact Name</span></label>
+                <label class="text-sm font-bold">緊急聯絡人姓名<span class="label-en">Emergency Contact Name</span></label>
                 <input id="n_emname" placeholder="Name" class="swal2-input swal-custom-input">
               </div>
               <div>
-                <label class="text-sm font-bold">緊急聯絡電話 <span class="text-xs font-normal opacity-60">Emergency Phone No.</span></label>
+                <label class="text-sm font-bold">緊急聯絡電話<span class="label-en">Emergency Phone No.</span></label>
                 <input id="n_emphone" placeholder="8 or 10 digits" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
               </div>
             </div>`,
+            showCancelButton: true,
             confirmButtonText: '提交 / Submit',
+            cancelButtonText: '取消離開 / Exit',
             preConfirm: () => {
               const name = document.getElementById('n_name').value;
               const phone = document.getElementById('n_phone').value;
