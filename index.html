@@ -40,6 +40,8 @@
     .hidden { display: none !important; }
     .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
     .swal-custom-input { font-size: 1.1rem !important; height: 3.5rem !important; margin: 0.5rem 0 !important; }
+    
+    .required::after { content: " *"; color: #e11d48; }
   </style>
 </head>
 <body>
@@ -244,7 +246,7 @@
         } else {
           Swal.fire({
             title: '驗證失敗',
-            html: `<p>${res.message}</p><p class="text-sm text-gray-500 mt-2">Login Failed</p>`,
+            html: `<p>${res.msg || '資料錯誤'}</p><p class="text-sm text-gray-500 mt-2">Login Failed</p>`,
             icon: 'error'
           });
         }
@@ -271,16 +273,21 @@
       dline.innerText = "截止日期 / Deadline: " + course.closingDate;
       
       let qHtml = "";
-      [course.q1, course.q2].forEach((qText, index) => {
-        if (!qText) return;
-        const qId = `ans${index + 1}`;
+      [
+        { text: course.q1, required: course.q1Required, id: 'ans1' },
+        { text: course.q2, required: course.q2Required, id: 'ans2' }
+      ].forEach((qObj) => {
+        if (!qObj.text) return;
+        const qId = qObj.id;
+        const requiredClass = qObj.required ? 'required' : '';
+        
         qHtml += `<div class="bg-indigo-50 p-6 rounded-3xl border-l-[12px] border-indigo-500 shadow-inner space-y-4">`;
         
-        if (qText.includes('|')) {
-          const parts = qText.split('|');
+        if (qObj.text.includes('|')) {
+          const parts = qObj.text.split('|');
           const title = parts[0];
           const options = parts.slice(1);
-          qHtml += `<label>${title}</label>`;
+          qHtml += `<label class="${requiredClass}">${title}</label>`;
           
           if (options.length >= 4) {
             qHtml += `<select id="${qId}" class="bg-white border-4 border-indigo-200">
@@ -299,7 +306,7 @@
             qHtml += `</div>`;
           }
         } else {
-          qHtml += `<label>${qText}</label><input type="text" id="${qId}" placeholder="請在此填寫 / Write here" class="border-4 border-indigo-200">`;
+          qHtml += `<label class="${requiredClass}">${qObj.text}</label><input type="text" id="${qId}" placeholder="請在此填寫 / Write here" class="border-4 border-indigo-200">`;
         }
         qHtml += `</div>`;
       });
@@ -318,11 +325,20 @@
 
     async function doSubmit() {
       const cid = document.getElementById('courseSelect').value;
+      const course = coursesData.find(c => c.id === cid);
       const phone = document.getElementById('userPhone').value;
       const emName = document.getElementById('emeName').value;
       const emPhone = document.getElementById('emePhone').value;
 
       if (!cid) return Swal.fire('尚未選擇課程', 'Please select a course', 'warning');
+
+      // Validate Mandatory Questions
+      if (course.q1 && course.q1Required && !getDynamicAnswer('ans1')) {
+        return Swal.fire('請回答必填問題', `請回答：${course.q1.split('|')[0]}`, 'warning');
+      }
+      if (course.q2 && course.q2Required && !getDynamicAnswer('ans2')) {
+        return Swal.fire('請回答必填問題', `請回答：${course.q2.split('|')[0]}`, 'warning');
+      }
       
       if (phone.length !== 8 && phone.length !== 10) return Swal.fire('電話格式錯誤 / Phone Error', '個人電話必須為 8 或 10 位數字 / Phone number must be 8 or 10 digits', 'warning');
       if (!emName) return Swal.fire('資料不全 / Missing Info', '請輸入緊急聯絡人姓名 / Please enter emergency contact name', 'warning');
@@ -464,19 +480,34 @@
             html: `<p class="text-xs text-gray-500 -mt-2 mb-4">Member Registration</p>
             <div class="space-y-4">
               <input id="n_name" placeholder="真實姓名 / Real Name" class="swal2-input swal-custom-input">
-              <input id="n_phone" placeholder="電話 / Phone" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+              <input id="n_phone" placeholder="聯絡電話 / Personal Phone" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
+              <input id="n_emname" placeholder="緊急聯絡人 / Emergency Contact Name" class="swal2-input swal-custom-input">
+              <input id="n_emphone" placeholder="緊急電話 / Emergency Phone" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric">
             </div>`,
             confirmButtonText: '提交 / Submit',
             preConfirm: () => {
               const name = document.getElementById('n_name').value;
               const phone = document.getElementById('n_phone').value;
+              const emName = document.getElementById('n_emname').value;
+              const emPhone = document.getElementById('n_emphone').value;
+              
               if (!name) return Swal.showValidationMessage('請輸入姓名 / Name required');
               if (phone.length !== 8 && phone.length !== 10) return Swal.showValidationMessage('電話須為 8 或 10 位 / 8 or 10 digits required');
-              return { name, phone };
+              if (!emName) return Swal.showValidationMessage('請輸入緊急聯絡人姓名 / Emergency name required');
+              if (emPhone.length !== 8 && emPhone.length !== 10) return Swal.showValidationMessage('緊急電話須為 8 或 10 位 / 8 or 10 digits required');
+              
+              return { name, phone, emName, emPhone };
             }
           }).then(async (r2) => {
             if (r2.isConfirmed) {
-              const res = await callGoogle('createNewMember', [{ mid: id, name: r2.value.name, dob: yr + '-01-01', userPhone: r2.value.phone }]);
+              const res = await callGoogle('createNewMember', [{ 
+                mid: id, 
+                name: r2.value.name, 
+                dob: yr + '-01-01', 
+                userPhone: r2.value.phone,
+                emeName: r2.value.emName,
+                emePhone: r2.value.emPhone
+              }]);
               Swal.fire({
                 title: res.success ? '註冊成功' : '註冊失敗',
                 html: `<p>${res.msg}</p><p class="text-sm text-gray-500 mt-2">${res.success ? 'Success' : 'Failed'}</p>`,
