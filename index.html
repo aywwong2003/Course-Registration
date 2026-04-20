@@ -197,15 +197,12 @@
         const res = await callGoogle('validateMember', [mid, yr]);
         if (res.success) {
           Swal.close();
-          // Hide login/main components
           document.getElementById('auth-section').classList.add('hidden');
           document.getElementById('bottom-utils').classList.add('hidden');
-          
-          // Show Reg UI
           document.getElementById('reg-section').classList.remove('hidden');
           document.getElementById('welcome-msg').innerHTML = `👋 您好，<span class="text-indigo-600">${res.name || '會員'}</span>`;
           
-          // Prefill
+          // Retrieve and display member fields
           document.getElementById('userPhone').value = res.phone || "";
           document.getElementById('emeName').value = res.emName || "";
           document.getElementById('emePhone').value = res.emPhone || "";
@@ -291,15 +288,22 @@
     async function doSubmit() {
       const cid = document.getElementById('courseSelect').value;
       const phone = document.getElementById('userPhone').value;
+      const emName = document.getElementById('emeName').value;
+      const emPhone = document.getElementById('emePhone').value;
+
       if (!cid) return Swal.fire('尚未選擇課程', 'Please select a course', 'warning');
-      if (phone.length < 8) return Swal.fire('電話格式錯誤', 'Phone number is too short', 'warning');
+      
+      // Strict Validation for Contact Info
+      if (phone.length !== 8 && phone.length !== 10) return Swal.fire('電話格式錯誤', '個人電話必須為 8 或 10 位數字', 'warning');
+      if (!emName) return Swal.fire('資料不全', '請輸入緊急聯絡人姓名', 'warning');
+      if (emPhone.length !== 8 && emPhone.length !== 10) return Swal.fire('電話格式錯誤', '緊急電話必須為 8 或 10 位數字', 'warning');
 
       const payload = {
         mid: document.getElementById('mid').value,
         cid: cid,
         userPhone: phone,
-        emeName: document.getElementById('emeName').value,
-        emePhone: document.getElementById('emePhone').value,
+        emeName: emName,
+        emePhone: emPhone,
         ans1: getDynamicAnswer('ans1'),
         ans2: getDynamicAnswer('ans2')
       };
@@ -338,7 +342,7 @@
       } catch (e) { Swal.fire('連線錯誤', 'Error fetching history', 'error'); }
     }
 
-    /** Contact Update Logic **/
+    /** Contact Update Logic with Strict Validation **/
     async function handleUpdateContact() {
       const mid = document.getElementById('mid').value;
       const yr = document.getElementById('birthYear').value;
@@ -351,13 +355,22 @@
         Swal.fire({
           title: '更新聯絡資料',
           html: `<div class="space-y-4 text-left p-2">
-            <div><label class="text-sm">個人電話</label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)"></div>
+            <div><label class="text-sm">個人電話</label><input id="u_p" value="${info.phone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric"></div>
             <div><label class="text-sm">緊急聯絡人</label><input id="u_en" value="${info.emName}" class="swal2-input swal-custom-input"></div>
-            <div><label class="text-sm">緊急電話</label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)"></div>
+            <div><label class="text-sm">緊急電話</label><input id="u_ep" value="${info.emPhone}" class="swal2-input swal-custom-input" type="number" oninput="cInp(this, 10)" inputmode="numeric"></div>
           </div>`,
           showCancelButton: true,
-          confirmButtonText: '儲存更新',
-          preConfirm: () => ({ phone: document.getElementById('u_p').value, emName: document.getElementById('u_en').value, emPhone: document.getElementById('u_ep').value })
+          confirmButtonText: '儲存更新 / Save',
+          cancelButtonText: '取消',
+          preConfirm: () => {
+            const phone = document.getElementById('u_p').value;
+            const emName = document.getElementById('u_en').value;
+            const emPhone = document.getElementById('u_ep').value;
+            if (phone.length !== 8 && phone.length !== 10) return Swal.showValidationMessage('個人電話必須為 8 或 10 位數字');
+            if (!emName) return Swal.showValidationMessage('請輸入緊急聯絡人姓名');
+            if (emPhone.length !== 8 && emPhone.length !== 10) return Swal.showValidationMessage('緊急電話必須為 8 或 10 位數字');
+            return { phone, emName, emPhone };
+          }
         }).then(async (r) => {
           if (r.isConfirmed) {
             Swal.fire({ title: '處理中...', didOpen: () => Swal.showLoading() });
