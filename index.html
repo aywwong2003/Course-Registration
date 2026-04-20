@@ -200,7 +200,7 @@
           document.getElementById('auth-section').classList.add('hidden');
           document.getElementById('bottom-utils').classList.add('hidden');
           document.getElementById('reg-section').classList.remove('hidden');
-          document.getElementById('welcome-msg').innerHTML = `👋 您好，<span class="text-indigo-600">${res.username || '會員'}</span>`;
+          document.getElementById('welcome-msg').innerHTML = `👋 您好，<span class="text-indigo-600">${res.userName || '會員'}</span>`;
           
           // Retrieve and display member fields
           document.getElementById('userPhone').value = res.phone || "";
