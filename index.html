@@ -234,11 +234,11 @@
           document.getElementById('auth-section').classList.add('hidden');
           document.getElementById('bottom-utils').classList.add('hidden');
           document.getElementById('reg-section').classList.remove('hidden');
-          document.getElementById('welcome-msg').innerHTML = `👋 您好<br><span class="text-sm font-normal text-slate-500">Hello,</span> <span class="text-indigo-600">${res.userName || '會員'}</span>`;
+          document.getElementById('welcome-msg').innerHTML = `👋 您好<br><span class="text-sm font-normal text-slate-500">Hello,</span> <span class="text-indigo-600">${res.name || '會員'}</span>`;
           
-          document.getElementById('userPhone').value = res.phone || "";
-          document.getElementById('emeName').value = res.emergencyName || "";
-          document.getElementById('emePhone').value = res.emergencyPhone || "";
+          document.getElementById('userPhone').value = res.userPhone || "";
+          document.getElementById('emeName').value = res.emeName || "";
+          document.getElementById('emePhone').value = res.emePhone || "";
           
           loadCourses();
         } else if (res.isNearMiss) {
