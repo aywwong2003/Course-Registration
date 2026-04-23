@@ -378,19 +378,23 @@
       }).then(r => {
         if (r.isConfirmed) {
           Swal.fire({
-            title: '會員註冊',
+            title: '會員註冊 (Register)',
             html: `<div class="space-y-4 text-left">
-              <input id="n_name" placeholder="真實姓名" class="swal2-input swal-custom-input">
-              <input id="n_phone" placeholder="電話" class="swal2-input swal-custom-input" type="number">
-              <input id="n_emname" placeholder="緊急聯絡人" class="swal2-input swal-custom-input">
-              <input id="n_emphone" placeholder="緊急聯絡電話" class="swal2-input swal-custom-input" type="number">
+              <label class="text-sm font-bold">真實姓名 Name</label>
+              <input id="n_name" placeholder="請輸入姓名" class="swal2-input swal-custom-input">
+              <label class="text-sm font-bold">個人電話 Phone</label>
+              <input id="n_phone" placeholder="請輸入電話" class="swal2-input swal-custom-input" type="number">
+              <label class="text-sm font-bold">緊急聯絡人 Emergency Contact</label>
+              <input id="n_emname" placeholder="請輸入姓名" class="swal2-input swal-custom-input">
+              <label class="text-sm font-bold">緊急聯絡電話 Emergency Phone</label>
+              <input id="n_emphone" placeholder="請輸入電話" class="swal2-input swal-custom-input" type="number">
             </div>`,
             showCancelButton: true,
             preConfirm: () => {
-              const name = document.getElementById('n_name').value;
-              const phone = document.getElementById('n_phone').value;
-              const emName = document.getElementById('n_emname').value;
-              const emPhone = document.getElementById('n_emphone').value;
+              const name = document.getElementById('n_name').value.trim();
+              const phone = document.getElementById('n_phone').value.trim();
+              const emName = document.getElementById('n_emname').value.trim();
+              const emPhone = document.getElementById('n_emphone').value.trim();
               if (!name || phone.length < 8 || !emName || emPhone.length < 8) {
                 Swal.showValidationMessage('請填寫完整且正確的資料');
               }
@@ -398,11 +402,20 @@
             }
           }).then(async (r2) => {
             if (r2.isConfirmed) {
-              const res = await callGoogle('createNewMember', [{ 
-                mid: id, name: r2.value.name, dob: yr + '-01-01', 
-                userPhone: r2.value.phone, emeName: r2.value.emName, emePhone: r2.value.emPhone
-              }]);
-              Swal.fire(res.success?'註冊成功':'失敗', res.msg, res.success?'success':'error').then(() => { if(res.success) doLogin(); });
+              Swal.fire({ title: '註冊中...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+              try {
+                const res = await callGoogle('createNewMember', [{ 
+                  mid: id, name: r2.value.name, dob: yr + '-01-01', 
+                  userPhone: r2.value.phone, emeName: r2.value.emName, emePhone: r2.value.emPhone
+                }]);
+                if (res.success) {
+                  Swal.fire('註冊成功', res.msg, 'success').then(() => doLogin());
+                } else {
+                  Swal.fire('註冊失敗', res.msg, 'error');
+                }
+              } catch (e) {
+                Swal.fire('連線錯誤', '無法完成註冊', 'error');
+              }
             }
           });
         }
