@@ -46,6 +46,7 @@
 </head>
 <body>
 
+  <!-- Startup Loading Screen -->
   <div id="loading-status" class="loading-overlay">
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent"></div>
@@ -62,6 +63,7 @@
     </header>
 
     <main class="max-w-2xl mx-auto space-y-6">
+      <!-- Auth Section (Main Menu) -->
       <section id="auth-section" class="card space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -85,6 +87,7 @@
         </button>
       </section>
 
+      <!-- Registration Section -->
       <section id="reg-section" class="hidden space-y-6">
         <div id="welcome-msg" class="text-2xl font-black text-center text-indigo-800 py-6 bg-indigo-50 rounded-2xl border-4 border-indigo-100 shadow-inner"></div>
         
@@ -100,6 +103,7 @@
             <p id="deadline" class="text-rose-600 font-bold mt-2 h-6 text-sm"></p>
           </div>
 
+          <!-- Dynamic Questions -->
           <div id="dynamicQuestions" class="space-y-8 hidden"></div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t-4 border-slate-100">
@@ -136,6 +140,7 @@
         </div>
       </section>
 
+      <!-- Bottom Utilities -->
       <div id="bottom-utils" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button id="btn-history" onclick="showHistory()" class="btn-main bg-white text-slate-700 border-4 border-slate-200 shadow-sm text-lg">
           查詢/取消報名
@@ -252,7 +257,6 @@
       try {
         const res = await callGoogle('getInitialData');
         
-        // Fix: Detect if courses are inside res.courses or returned directly as an array
         if (Array.isArray(res)) {
           coursesData = res;
         } else if (res && res.courses) {
@@ -273,11 +277,25 @@
           coursesData.map(c => {
             const current = parseInt(c.currentCount) || 0;
             const quota = parseInt(c.quota) || 0;
-            const wait = parseInt(c.waitingQuota) || 0;
-            const isFull = current >= (quota + wait);
-            const statusLabel = c.isClosed ? '已截止' : (isFull ? '名額已滿' : '報名中');
+            const waitQuota = parseInt(c.waitingQuota) || 0;
+            const totalAvailable = quota + waitQuota;
             
-            return `<option value="${c.id}" ${c.isClosed || isFull ? 'disabled style="color:#cbd5e1"' : ''}>${c.name} (${statusLabel})</option>`;
+            // Calculate vacancy
+            let vacancyInfo = "";
+            if (current < quota) {
+                vacancyInfo = `(餘額: ${quota - current})`;
+            } else if (current < totalAvailable) {
+                vacancyInfo = `(候補中: ${current - quota + 1}/${waitQuota})`;
+            } else {
+                vacancyInfo = `(已額滿 Full)`;
+            }
+
+            const isFull = current >= totalAvailable;
+            const statusLabel = c.isClosed ? '已截止' : (isFull ? '名額已滿' : vacancyInfo);
+            
+            return `<option value="${c.id}" ${c.isClosed || isFull ? 'disabled style="color:#94a3b8"' : ''}>
+              ${c.name} ${statusLabel}
+            </option>`;
           }).join('');
       } catch (e) { 
         console.error(e);
@@ -354,7 +372,6 @@
 
       if (!cid) return Swal.fire('尚未選擇課程', 'Please select a course', 'warning');
 
-      // Validate Mandatory Questions
       if (course.q1 && course.q1Required && !getDynamicAnswer('ans1')) {
         return Swal.fire('請回答必填問題', `請回答：${course.q1.split('|')[0]}`, 'warning');
       }
