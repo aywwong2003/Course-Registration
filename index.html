@@ -345,12 +345,22 @@ if (options.length >= 4) {
       if (!cid) return Swal.fire('尚未選擇課程', 'Please select a course', 'warning');
 
       // Validate Mandatory Questions
-      if (course.q1 && course.q1Required && !getDynamicAnswer('ans1')) {
-        return Swal.fire('請回答必填問題', `請回答：${course.q1.split('|')[0]}`, 'warning');
-      }
-      if (course.q2 && course.q2Required && !getDynamicAnswer('ans2')) {
-        return Swal.fire('請回答必填問題', `請回答：${course.q2.split('|')[0]}`, 'warning');
-      }
+      if (course.q1) {
+    const a1 = getDynamicAnswer('ans1');
+    if (!a1 || a1.trim() === "") {
+      const qTitle = course.q1.split('|')[0].replace('<br>', ' ');
+      return Swal.fire('請回答必填問題', `請填寫：${qTitle}\n(Please answer the required question)`, 'warning');
+    }
+  }
+
+  // 檢查問題 2 (如果該問題存在)
+  if (course.q2) {
+    const a2 = getDynamicAnswer('ans2');
+    if (!a2 || a2.trim() === "") {
+      const qTitle = course.q2.split('|')[0].replace('<br>', ' ');
+      return Swal.fire('請回答必填問題', `請填寫：${qTitle}\n(Please answer the required question)`, 'warning');
+    }
+  }
       
       if (phone.length !== 8 && phone.length !== 10) return Swal.fire('電話格式錯誤 / Phone Error', '個人電話必須為 8 或 10 位數字 / Phone number must be 8 or 10 digits', 'warning');
       if (!emName) return Swal.fire('資料不全 / Missing Info', '請輸入緊急聯絡人姓名 / Please enter emergency contact name', 'warning');
