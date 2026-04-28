@@ -268,8 +268,12 @@
       const course = coursesData.find(c => c.id === cid);
       const qDiv = document.getElementById('dynamicQuestions');
       const dline = document.getElementById('deadline');
-      
-      if (!course) { qDiv.classList.add('hidden'); dline.innerText = ""; return; }
+  
+    	qDiv.innerHTML = ""; 
+  	qDiv.classList.add('hidden');
+  	dline.innerText = "";
+ 
+     if (!course) { qDiv.classList.add('hidden'); dline.innerText = ""; return; }
       dline.innerText = "截止日期 / Deadline: " + course.closingDate;
       
       let qHtml = "";
