@@ -239,7 +239,10 @@
           document.getElementById('userPhone').value = res.phone || "";
           document.getElementById('emeName').value = res.emergencyName || "";
           document.getElementById('emePhone').value = res.emergencyPhone || "";
-          
+
+          document.getElementById('courseSelect').value = ""; // 新增：重置下拉選單到「請選擇」狀態
+          onCourseChange(); // 新增：觸發清空舊的問題內容
+
           loadCourses();
         } else if (res.isNearMiss) {
           handleNearMiss(res.suggestedId, yr);
